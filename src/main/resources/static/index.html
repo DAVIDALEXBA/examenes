@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Calificaciones test</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script type="text/javascript" src="/js/axios.min.js"></script>
+    <script type="text/javascript" src="/js/preguntas.js"></script>
+    <style>
+        .box{
+            margin-top: 16px;
+            border:1px solid darkblue; padding: 8px; width: 700px;
+        }
+        .resp_block{
+            padding-top: 8px 
+        }
+    </style>
+</head>
+<body>
+    <h2>Página de prueba para preguntas de exámenes</h2>
+    <pre>
+    Al servidor se enviaría una cadena larga con el siguiente formato:
+
+    Pregunta 1¬posible respuesta 1·posible respuesta 2·etc¬índice de la respuesta correcta &lt;enter&gt;
+    Pregunta 2¬posible respuesta 1·posible respuesta 2·etc¬índice de la respuesta correcta
+    </pre>
+    <div id="app">
+        <form action="">
+            <label for="nombre_mat">Materia</label>
+            <input type="text" name="nombre_mat" v-model="nombre_mat">
+            {{nombre_mat}}
+            <button @click.prevent="fn_nueva_materia">Enviar</button>
+        </form>
+        <ul>
+            <li v-for="m in materias"><a href="" @click.prevent="fn_detalle_materia(m)">{{m.id}} {{m.nombre}}</a></li>
+        </ul>
+       
+        
+        <preguntas v-if="materia_selected>=0" v-bind:materia="materia"></preguntas>
+        
+    </div>
+    <pre>* Esto no tiene validaciones sobre textos u obligatoriedad de respuestas, pero es la base.</pre>
+</body>
+<script type="text/javascript">
+   
+    
+    var app = new Vue({
+        el: '#app',
+        data: {
+            
+            materias: [],
+            nombre_mat:'',
+            data:'',
+            materia_selected: -1,
+            materia:{}
+        },
+        methods: {
+        	fn_nueva_materia: function(){
+        		var fd=new FormData();
+        		fd.append("nombre", this.nombre_mat);
+        		axios({
+                    method: 'post',
+                    url: '/materia/nueva',
+                    responseType: 'json',
+                    data: fd
+                })
+                .then(this.fn_asignar_materia);
+        	},
+        	fn_detalle_materia: function(materia){
+                this.materia_selected=materia.id;
+                this.materia=materia;
+                var fd=new FormData();
+                fd.append("nombre", this.nombre_mat);
+                axios({
+                    method: 'get',
+                    url: '/materia/nueva',
+                    responseType: 'json',
+                    data: fd
+                })
+                .then(this.fn_asignar_materia);
+                
+            },
+            fn_asignar_materia: function(response){
+            	this.materias=response.data;
+            }
+           
+            
+            
+        },
+        computed:{
+        },
+        mounted: function(){
+        	console.log("estamos en mounted()");
+        	axios({
+        		  method: 'get',
+        		  url: '/materia/todas',
+        		  responseType: 'json'
+        	})
+            .then(this.fn_asignar_materia);
+        }
+    });
+</script>
+</html>
