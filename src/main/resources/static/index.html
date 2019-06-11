@@ -38,7 +38,7 @@
         </ul>
        
         
-        <preguntas v-if="materia_selected>=0" v-bind:materia="materia"></preguntas>
+        <preguntas v-if="materia_selected>=0" v-bind:materia="materia" v-bind:pregs="pregs" ></preguntas>
         
     </div>
     <pre>* Esto no tiene validaciones sobre textos u obligatoriedad de respuestas, pero es la base.</pre>
@@ -54,7 +54,8 @@
             nombre_mat:'',
             data:'',
             materia_selected: -1,
-            materia:{}
+            materia:{},
+            pregs: [],
         },
         methods: {
         	fn_nueva_materia: function(){
@@ -68,18 +69,23 @@
                 })
                 .then(this.fn_asignar_materia);
         	},
+        	fn_asignar_preguntas1: function(response)
+            {
+                
+                this.pregs = response.data;
+                console.log("hey!!");
+                console.log(response.data);
+            },
         	fn_detalle_materia: function(materia){
                 this.materia_selected=materia.id;
                 this.materia=materia;
-                var fd=new FormData();
-                fd.append("nombre", this.nombre_mat);
+                
                 axios({
                     method: 'get',
-                    url: '/materia/nueva',
-                    responseType: 'json',
-                    data: fd
-                })
-                .then(this.fn_asignar_materia);
+                    url: '/materia/preguntas/'+this.materia.id,
+                    responseType: 'json'
+                }).then(this.fn_asignar_preguntas1).catch(function(error){alert("error")});
+                
                 
             },
             fn_asignar_materia: function(response){

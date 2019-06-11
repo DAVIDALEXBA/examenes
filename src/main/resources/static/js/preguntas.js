@@ -8,11 +8,28 @@ Vue.component('preguntas',{
             <input type="button" value="+" @click="fn_add" >
         </div>
         <button @click="fn_ver">Enviar al servidor</button>
-        <ul v-if="pregs.length>0">
-            <li v-for="(preg,index) in pregs">{{preg.desc}} <button @click="fn_remove_question(index)">x</button><br>
-                <respuesta-component v-bind:index="index" v-bind:preg="preg"></respuesta-component>
+        <br>
+        <h1> Preguntas </h1>
+        <ul>
+            <li v-for="e in exam">
+            	{{e.pregunta}}
+            	
+            	<ul>
+            		
+	            	<li v-for="i in e.respArray">
+	            	{{i}}
+	            	</li>
+            	</ul>
+           
             </li>
         </ul>
+        <ul>
+            <li v-for="(preg,index) in pregs">{{preg.desc}} <button @click="fn_remove_question(preg.desc, index)">X</button><br>
+               <br> <respuesta-component v-bind:index="index" v-bind:preg="preg"></respuesta-component><br>
+            </li>
+        </ul>
+        
+        
 	</div>
 	
 	`
@@ -22,10 +39,19 @@ Vue.component('preguntas',{
              this.pregs.push({desc: this.current_preg,resps:[]});
              this.current_preg=''
          },
-         fn_remove_question:function(index)
+         fn_remove_question:function(index, n)
          {
-             console.log(index);
-             this.pregs.splice(index,1)
+//             console.log(index);
+            this.pregs.splice(n,1)
+        	var fd=new FormData();
+       		fd.append("pregunta",index);
+       		axios({
+                   method: 'post',
+                   url: '/materia/deletePregunta',
+                   responseType: 'json',
+                   data: fd
+               })
+        	 
          },
          fn_ver:function(){
              var arr=[];
@@ -53,41 +79,55 @@ Vue.component('preguntas',{
          },
          fn_asignar_preguntas: function(response)
          {
-        	 pregs = response;
-         }
+        	 console.log("Estamos en asignar");
+        	 this.exam = response.data;
+        	
+         },
+//         fn_asignar_preguntas1: function(response)
+//         {
+//        	 
+//        	 this.pregs = response.data;
+//        	 console.log(response.data);
+//         }
 	},
 	data: function(){
 		return{
-			pregs: [],
+			//pregs: [],
+			exam:[],
+			row:[],
 			current_preg:''
 		}
 	},
-	props: ['materia'],
+	props: ['materia','pregs'],
 	mounted: function(){
-		if( typeof materia.id!='undefined')
-			{
-			var fd=new FormData();
-     		fd.append("id_materia", this.materia.id);
-			axios({
-                method: 'get',
-                url: '/materia/verPreguntas',
-                responseType: 'json',
-                data: fd
-            }).then(this.fn_asignar_preguntas).catch(function(error){});
-			}
+		
+//		axios({
+//          method: 'get',
+//          url: '/materia/preguntas/'+this.materia.id,
+//          responseType: 'json'
+//      }).then(this.fn_asignar_preguntas1).catch(function(error){alert("error")});
+		
+			
+//     		axios({
+//                method: 'get',
+//                url: '/materia/verPreguntas/'+this.materia.id,
+//                responseType: 'json'
+//            }).then(this.fn_asignar_preguntas).catch(function(error){alert("error")});
+//			
 	}
 });
 Vue.component('respuesta-component',{
     template:`
     <div class="resp_block">
         <div style="padding-left: 8px">
-            <label for="resp">Respuesta</label><input type="text" size="40" v-bind:id="fn_name('resp',index,-1)" v-model:value="inputText" @keyup.enter="fn_add_resp">
-            <input type="checkbox" v-model="checked">Respuesta correcta
-            <input type="button" value="+" @click="fn_add_resp">
+             <label for="resp">Respuesta</label><input type="text" size="40" v-bind:id="fn_name('resp',index,-1)" v-model:value="inputText" @keyup.enter="fn_add_resp"> 
+             <input type="checkbox" v-model="checked">Respuesta correcta 
+             <input type="button" value="+" @click="fn_add_resp"> 
         </div>
         <ul v-if="preg.resps.length>0">
             <li v-for="(resp,idx) in preg.resps">
             {{resp.desc}} <input type="radio" v-bind:id="fn_name('_r',index,idx)" v-bind:name="fn_name('_r',index,-1)" v-bind:value="idx" :checked="resp.isTheRightAnswer" @change="fn_radio_change">{{resp.isTheRightAnswer}}
+            <input type="button" value="x" @click="fn_remove_option(resp)">
             </li>
         </ul>
     </div>
@@ -114,6 +154,19 @@ Vue.component('respuesta-component',{
                 this.preg.resps[i].isTheRightAnswer= (i== e.target.value)
             }
         },
+        fn_remove_option: function(idx)
+        {
+        	 console.log("->"+idx.desc);
+        	 var fd=new FormData();
+      		fd.append("respuesta", idx.desc);
+      		axios({
+                  method: 'post',
+                  url: '/materia/updateResp',
+                  responseType: 'json',
+                  data: fd
+              })
+        	 location.reload();
+        }
     },
     mounted: function () {
         document.getElementById("resp_"+this.index).focus();
